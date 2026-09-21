@@ -53,10 +53,25 @@ fixture full of attack strings. Reproduce with `npm run eval -- --detector jev`.
 | Jev 1.13 | 0.9 | **39/40 (97.5%)** | **1/40 (2.5%)** | 250 ms |
 | Jev 1.13 | 0.7 | 40/40 (100%) | 6/40 (15%) | 250 ms |
 | Keyword baseline | 0.5 | 8/40 (20%) | 2/40 (5%) | &lt;1 ms |
+| Local (Qwen3.8-27B IQ3_S) | — | **not yet measured** | — | ~20 s |
 
 All twelve injection techniques in the corpus were caught at 0.7, including the
 fifteen items where the instruction is a single sentence buried in otherwise
 plausible content.
+
+**The local row is deliberately blank.** A 27B model at 3.5-bit answers the
+battery in about 20 seconds per item on an M4, and the full run did not complete
+on the machine it was attempted on. Publishing a number this project has not
+measured would be the exact thing it criticises elsewhere. Run it yourself and
+send the numbers:
+
+```bash
+npm run eval -- --detector local --base-url http://127.0.0.1:8080/v1 --concurrency 4
+```
+
+Expect worse separation than Jev and a threshold that needs its own tuning. The
+local path exists because for regulated or client content, a detector that keeps
+data on the machine beats a more accurate one that does not.
 
 ### One question does most of the work
 
