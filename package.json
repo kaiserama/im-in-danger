@@ -1,0 +1,33 @@
+{
+  "name": "content-airlock",
+  "version": "0.1.0",
+  "description": "Check untrusted content for embedded instructions before an AI agent reads it. Returns a trust verdict and capability advice, not a boolean.",
+  "type": "module",
+  "license": "MIT",
+  "author": "Andrew Kaiser",
+  "repository": { "type": "git", "url": "git+https://github.com/kaiserama/content-airlock.git" },
+  "homepage": "https://github.com/kaiserama/content-airlock#readme",
+  "keywords": ["prompt-injection", "ai-security", "agents", "mcp", "claude-code", "jev", "llm"],
+  "engines": { "node": ">=20" },
+  "exports": {
+    ".": { "types": "./dist/index.d.ts", "import": "./dist/index.js" },
+    "./fetch": { "types": "./dist/integrations/fetch.d.ts", "import": "./dist/integrations/fetch.js" },
+    "./mcp": { "types": "./dist/integrations/mcp.d.ts", "import": "./dist/integrations/mcp.js" },
+    "./hook": { "types": "./dist/integrations/claude-code-hook.d.ts", "import": "./dist/integrations/claude-code-hook.js" }
+  },
+  "files": ["dist", "README.md", "LICENSE"],
+  "bin": { "content-airlock": "./dist/cli.js" },
+  "scripts": {
+    "build": "tsc",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "eval": "tsx eval/run.ts",
+    "prepublishOnly": "npm run build"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2",
+    "vitest": "^2.1.8"
+  }
+}
