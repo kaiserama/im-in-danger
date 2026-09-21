@@ -56,8 +56,12 @@ export class HeuristicDetector implements Detector {
     const scores: Scores = {};
     for (const [id, regexes] of PATTERNS) {
       const hits = regexes.reduce((n, re) => n + (re.test(text) ? 1 : 0), 0);
-      // One hit is weak evidence, two or more is strong. Never fully certain.
-      if (hits > 0) scores[id] = hits >= 2 ? 0.9 : 0.6;
+      // A single pattern here is a phrase like "ignore all previous instructions",
+      // which has no innocent reading in fetched content. It must be able to reach
+      // `suspect` on its own: this detector is the default when no API key is set,
+      // and an earlier 0.6 sat below the 0.7 threshold, so it passed obvious
+      // injections as clean. Two or more patterns is strong evidence.
+      if (hits > 0) scores[id] = hits >= 2 ? 0.92 : 0.75;
       else scores[id] = 0.02;
     }
     return scores;

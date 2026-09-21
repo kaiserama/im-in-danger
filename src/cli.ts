@@ -36,7 +36,7 @@ async function main() {
   const [cmd = 'check', ...argv] = process.argv.slice(2);
 
   if (cmd === 'hook') {
-    await import('../integrations/claude-code-hook.js');
+    await import('./integrations/claude-code-hook.js');
     return;
   }
   if (cmd !== 'check') {

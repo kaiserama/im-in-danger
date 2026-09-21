@@ -22,13 +22,13 @@
  *     the result from reaching the model at all.
  *   - It CANNOT withdraw capabilities mid-session. A hook is not a sandbox.
  *     For real capability control, put the airlock inside your own fetch tool
- *     (see integrations/fetch.ts) where you own the dispatch path.
+ *     (see src/integrations/fetch.ts) where you own the dispatch path.
  *
  * Reads a hook payload on stdin, writes a hook response on stdout.
  */
-import { Airlock } from '../src/check.js';
-import { JevDetector } from '../src/detectors/jev.js';
-import { HeuristicDetector } from '../src/detectors/heuristic.js';
+import { Airlock } from '../check.js';
+import { JevDetector } from '../detectors/jev.js';
+import { HeuristicDetector } from '../detectors/heuristic.js';
 
 interface HookPayload {
   tool_name?: string;

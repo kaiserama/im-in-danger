@@ -52,7 +52,7 @@ fixture full of attack strings. Reproduce with `npm run eval -- --detector jev`.
 | --- | --- | --- | --- | --- |
 | Jev 1.13 | 0.9 | **39/40 (97.5%)** | **1/40 (2.5%)** | 250 ms |
 | Jev 1.13 | 0.7 | 40/40 (100%) | 6/40 (15%) | 250 ms |
-| Keyword baseline | 0.5 | 8/40 (20%) | 2/40 (5%) | &lt;1 ms |
+| Keyword baseline | 0.7 | 8/40 (20%) | 2/40 (5%) | &lt;1 ms |
 | Local (Qwen3.8-27B IQ3_S) | — | **not yet measured** | — | ~20 s |
 
 All twelve injection techniques in the corpus were caught at 0.7, including the

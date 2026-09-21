@@ -1,5 +1,5 @@
-import { Airlock } from '../src/check.js';
-import type { AirlockOptions, Envelope } from '../src/types.js';
+import { Airlock } from '../check.js';
+import type { AirlockOptions, Envelope } from '../types.js';
 import { renderForTool } from './fetch.js';
 
 /**
