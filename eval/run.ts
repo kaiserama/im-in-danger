@@ -2,6 +2,7 @@
  * The benchmark. This is the point of the repository.
  *
  *   npm run eval -- --detector jev
+ *   npm run eval -- --detector jev --framing      # with the describes-vs-issues rule
  *   npm run eval -- --detector heuristic
  *   npm run eval -- --detector local --base-url http://127.0.0.1:8080/v1
  *
@@ -35,7 +36,7 @@ const arg = (flag: string): string | undefined => {
 };
 
 function detectorFor(name: string): Detector {
-  if (name === 'jev') return new JevDetector({ model: arg('--model') ?? 'jev-1.13.0' });
+  if (name === 'jev') return new JevDetector({ model: arg('--model') ?? 'jev-1.13.0', framingRule: process.argv.includes('--framing') });
   if (name === 'local') return new LocalDetector({ baseUrl: arg('--base-url'), model: arg('--model') });
   return new HeuristicDetector();
 }

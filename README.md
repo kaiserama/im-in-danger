@@ -48,30 +48,46 @@ deliberate hard negatives**: a security advisory quoting an attack, internal doc
 about a company's own assistant, a genuine vendor bank-change email, a test
 fixture full of attack strings. Reproduce with `npm run eval -- --detector jev`.
 
-| Detector | Threshold | Caught | False alarms | Median latency |
-| --- | --- | --- | --- | --- |
-| Jev 1.13 | 0.9 | **39/40 (97.5%)** | **1/40 (2.5%)** | 250 ms |
-| Jev 1.13 | 0.7 | 40/40 (100%) | 6/40 (15%) | 250 ms |
-| Keyword baseline | 0.7 | 8/40 (20%) | 2/40 (5%) | &lt;1 ms |
-| Local (Qwen3.8-27B IQ3_S) | — | **not yet measured** | — | ~20 s |
+| Detector | Framing rule | Threshold | Caught | False alarms | Median latency |
+| --- | --- | --- | --- | --- | --- |
+| Jev 1.13 | off (default) | 0.9 | **39/40** | **1/40** | 120–250 ms |
+| Jev 1.13 | off (default) | 0.7 | 40/40 | 5–6/40 | 120–250 ms |
+| Jev 1.13 | on | 0.7 | 37/40 | 0/40 | 120–250 ms |
+| Local, Qwen3.8-27B IQ3_S | on | any | 38/40 | 2/40 | 74 s * |
+| Keyword baseline | — | 0.7 | 8/40 | 2/40 | &lt;1 ms |
 
-All twelve injection techniques in the corpus were caught at 0.7, including the
-fifteen items where the instruction is a single sentence buried in otherwise
-plausible content.
+\* Measured on an Apple M4 / 32 GB via llama.cpp with four requests in flight;
+the 80 items took 24 minutes. False alarms for Jev at 0.7 varied between 5 and 6
+across runs, because one benign item scores right at the threshold. Confident
+answers did not change between runs.
 
-**The local row is deliberately blank.** A 27B model at 3.5-bit answers the
-battery in about 20 seconds per item on an M4, and the full run did not complete
-on the machine it was attempted on. Publishing a number this project has not
-measured would be the exact thing it criticises elsewhere. Run it yourself and
-send the numbers:
+All twelve injection techniques in the corpus were caught by Jev at 0.7,
+including the fifteen items where the instruction is a single sentence buried in
+otherwise plausible content.
 
-```bash
-npm run eval -- --detector local --base-url http://127.0.0.1:8080/v1 --concurrency 4
-```
+### Three findings that matter more than the leaderboard
 
-Expect worse separation than Jev and a threshold that needs its own tuning. The
-local path exists because for regulated or client content, a detector that keeps
-data on the machine beats a more accurate one that does not.
+**1. A local model is competitive on accuracy and useless for tuning.** The 27B
+model caught 38/40 with 2 false alarms, and its separation on `instructs_ai`
+(0.88) was actually wider than Jev's. But its scores are effectively binary: it
+produced the identical result at 0.5, 0.7 and 0.9. There is no threshold to move.
+Jev's calibrated probabilities are what let you choose your own trade-off
+between misses and false alarms. For content that must stay on your machine the
+local detector is a real option; just know you are accepting its operating point,
+not choosing one.
+
+**2. The local model's misses were confident.** It scored a tool-argument
+poisoning ticket at 0.05 and a French-language injection at 0.00. A detector
+that is unsure can route to a human; one that is certain and wrong cannot.
+
+**3. The framing rule trades misses for false alarms.** Telling the model that
+content which *describes or quotes* an attack is not issuing one removes every
+Jev false alarm at 0.7, and lets three injections through as clean, including
+half the quoted-injection items. It is off by default, because in this design a
+false alarm costs a capability downgrade and a miss costs a clean pass. Turn it
+on with `new JevDetector({ framingRule: true })` if your agents routinely read
+security advisories, AI documentation or test fixtures. The local detector
+carries the rule in its prompt, which is part of why its false-alarm count is low.
 
 ### One question does most of the work
 
