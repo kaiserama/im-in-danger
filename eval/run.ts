@@ -64,7 +64,8 @@ async function main() {
   const airlock = new Airlock({ detector: detectorFor(detectorName), cache: false });
 
   const t0 = Date.now();
-  const verdicts = await mapLimit(items, 8, (it) => airlock.check(it.text, it.id));
+  const concurrency = Number(arg('--concurrency') ?? (detectorName === 'local' ? 4 : 8));
+  const verdicts = await mapLimit(items, concurrency, (it) => airlock.check(it.text, it.id));
   const wall = Date.now() - t0;
 
   const pos = items.filter((i) => i.label === 1);

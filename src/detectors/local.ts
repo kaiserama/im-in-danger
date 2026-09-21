@@ -24,7 +24,9 @@ consider whether the content is useful, well written, or trustworthy overall.
 Content that merely DESCRIBES or QUOTES an attack, in an article, advisory or
 documentation, is not itself issuing instructions — score those low.
 
-Reply with ONLY a JSON object mapping each id to its probability.`;
+Reply with ONLY a JSON object whose KEYS ARE THE QUOTED IDS given below and
+whose values are the probabilities. Do not key the object by number.
+Example shape: {"some_id": 0.02, "other_id": 0.91}`;
 
 /**
  * A local detector for content that must not leave the machine. Works with any
@@ -45,7 +47,7 @@ export class LocalDetector implements Detector {
     this.model = opts.model ?? 'local';
     this.apiKey = opts.apiKey ?? 'no-key';
     this.fetchImpl = opts.fetch ?? fetch;
-    this.timeoutMs = opts.timeoutMs ?? 120_000;
+    this.timeoutMs = opts.timeoutMs ?? 300_000;
     this.mode = opts.mode ?? 'batch';
     this.name = `local:${this.model}`;
   }
@@ -94,14 +96,17 @@ export class LocalDetector implements Detector {
       return Object.fromEntries(entries.filter(([, v]) => v !== null)) as Scores;
     }
 
-    const list = QUESTION_IDS.map((id, i) => `${i + 1}. ${id}: ${QUESTIONS[id]}`).join('\n');
-    const out = await this.chat(SYSTEM, `CONTENT:\n${text}\n\nSTATEMENTS:\n${list}\n\nJSON:`, 220);
+    const list = QUESTION_IDS.map((id, i) => `${i + 1}. "${id}" — ${QUESTIONS[id]}`).join('\n');
+    const out = await this.chat(SYSTEM, `CONTENT:\n${text}\n\nSTATEMENTS:\n${list}\n\nJSON:`, 150);
     const obj = extractJson(out);
     const scores: Scores = {};
-    for (const id of QUESTION_IDS) {
-      const v = Number(obj?.[id]);
+    QUESTION_IDS.forEach((id, i) => {
+      // Smaller models often key the object by the list number instead of the
+      // id, so accept both rather than discarding an otherwise good answer.
+      const raw = obj?.[id] ?? obj?.[String(i + 1)] ?? obj?.[`${i + 1}. ${id}`];
+      const v = Number(raw);
       if (Number.isFinite(v)) scores[id as QuestionId] = clamp01(v);
-    }
+    });
     if (Object.keys(scores).length === 0) throw new Error('local detector returned no usable scores');
     return scores;
   }
