@@ -111,3 +111,78 @@ describe('default detector regression', () => {
     expect(v.trust).not.toBe('clean');
   });
 });
+
+// Four defects found by the Rust port of src/sanitize.ts, verified against
+// the built dist/sanitize.js before the fixes landed.
+describe('sanitize: nested hidden elements (fix 1)', () => {
+  it('descends into a visible element to find a hidden child', () => {
+    const r = sanitize('<div class="wrap"><p>shown</p><div style="display:none">hidden</div></div>');
+    expect(r.hidden).toEqual(['hidden']);
+    expect(r.signals).toContain('invisible-element');
+    expect(r.clean).not.toMatch(/hidden/);
+    expect(r.clean).toMatch(/shown/);
+  });
+
+  it('still removes the whole subtree when the outer element is the hidden one', () => {
+    const r = sanitize('<div style="display:none"><p>secret</p><span>also secret</span></div>');
+    expect(r.hadHidden).toBe(true);
+    expect(r.clean).not.toMatch(/secret/);
+  });
+
+  it('handles a hidden element nested inside the same tag name', () => {
+    const r = sanitize('<div><div>visible copy</div><div hidden>payload</div></div>');
+    expect(r.hidden.join(' ')).toMatch(/payload/);
+    expect(r.clean).toMatch(/visible copy/);
+  });
+});
+
+describe('sanitize: hidden as an attribute name (fix 2)', () => {
+  it.each([
+    ['aria-hidden="false"', '<div aria-hidden="false"><p>visible widget</p></div>'],
+    ['data-hidden-label', '<div data-hidden-label="x"><p>text</p></div>'],
+    ['class="hidden-md-up"', '<div class="hidden-md-up"><p>responsive</p></div>'],
+  ])('does not fire on %s', (_label, html) => {
+    const r = sanitize(html);
+    expect(r.signals).toEqual([]);
+    expect(r.hadHidden).toBe(false);
+  });
+
+  it.each([
+    ['bare hidden', '<p hidden>real</p>'],
+    ['hidden=""', '<p class="x" hidden="">real</p>'],
+    ['aria-hidden="true"', '<p aria-hidden="true">real</p>'],
+  ])('still fires on %s', (_label, html) => {
+    expect(sanitize(html).signals).toContain('invisible-element');
+  });
+});
+
+describe('sanitize: style checks (fix 3)', () => {
+  it.each([
+    ['opacity:0.5', '<div style="opacity:0.5">fade in</div>'],
+    ['font-size:0.9em', '<div style="font-size:0.9em">small print</div>'],
+    ['background-color:#fff', '<div style="background-color:#fff;color:#333">light card</div>'],
+  ])('does not fire on %s', (_label, html) => {
+    const r = sanitize(html);
+    expect(r.signals).toEqual([]);
+    expect(r.hadHidden).toBe(false);
+  });
+
+  it.each([
+    ['opacity:0', '<div style="opacity:0">x</div>'],
+    ['opacity:0.0', '<div style="opacity:0.0">x</div>'],
+    ['font-size:0', '<div style="font-size:0">x</div>'],
+    ['font-size:0px', '<div style="font-size:0px">x</div>'],
+  ])('still fires on a genuinely zero value: %s', (_label, html) => {
+    expect(sanitize(html).signals).toContain('invisible-element');
+  });
+
+  it('catches an off-screen absolute element, which the old pattern could not', () => {
+    const r = sanitize('<div style="position:absolute; left:-9999px">offscreen payload</div>');
+    expect(r.signals).toContain('invisible-element');
+    expect(r.hidden).toEqual(['offscreen payload']);
+  });
+
+  it('still catches same-colour text', () => {
+    expect(sanitize('<span style="color:#ffffff">x</span>').signals).toContain('same-colour-text');
+  });
+});
