@@ -1,6 +1,6 @@
 {
   "name": "im-in-danger",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Stranger danger for AI agents: detect prompt injection in content your agent fetches, before it reads it. Runs on TypeSafe's Jev System One model by default, with local and keyword detectors. Benchmarked.",
   "type": "module",
   "license": "MIT",
