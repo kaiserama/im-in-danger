@@ -43,7 +43,7 @@ export function guardTool(
           return {
             ...part,
             text:
-              `[content-airlock] Output of ${name} was quarantined and is not shown.\n` +
+              `[im-in-danger] Output of ${name} was quarantined and is not shown.\n` +
               `Reasons: ${env.verdict.reasons.join('; ')}`,
           };
         }

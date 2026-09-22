@@ -1,14 +1,23 @@
-# content-airlock
+# im-in-danger
 
-Check untrusted content for embedded instructions **before** an AI agent reads it.
-Returns a trust verdict and capability advice, not a boolean.
+**Stranger danger for AI agents.** Check content your agent fetches for
+instructions aimed at it, *before* the agent reads it. Returns a trust verdict
+and capability advice, not a boolean.
+
+<p align="center">
+  <img src="https://raw.githubusercontent.com/kaiserama/im-in-danger/main/assets/im-in-danger.jpg" alt="Two-panel Ralph Wiggum meme. Top: 'My agent after reading a web page that says ignore all previous instructions', Ralph chuckles, I'm in danger. Bottom: 'My agent behind im-in-danger', a muscular Ralph chuckles, you're in danger." width="460">
+</p>
+
+If you run a coding agent in an unattended loop, the kind people call a Ralph
+loop, it is reading web pages, issues and email with nobody watching. This is
+for that.
 
 ```bash
-npm install content-airlock
+npm install im-in-danger
 ```
 
 ```ts
-import { Airlock, JevDetector } from 'content-airlock';
+import { Airlock, JevDetector } from 'im-in-danger';
 
 const airlock = new Airlock({ detector: new JevDetector() });
 const verdict = await airlock.check(htmlFromSomeWebsite);
@@ -156,7 +165,7 @@ A check the agent *chooses* to call is not a control. The agent has to read the
 content to decide, and by then the content is in its context. Wrap the fetcher:
 
 ```ts
-import { createGuardedFetch, renderForTool } from 'content-airlock/fetch';
+import { createGuardedFetch, renderForTool } from 'im-in-danger/fetch';
 
 const guardedFetch = createGuardedFetch({
   detector: new JevDetector(),
@@ -245,7 +254,7 @@ of newsletters, and accept what you lose.
   "hooks": {
     "PostToolUse": [
       { "matcher": "WebFetch|Read",
-        "hooks": [{ "type": "command", "command": "npx -y content-airlock hook" }] }
+        "hooks": [{ "type": "command", "command": "npx -y im-in-danger hook" }] }
     ]
   }
 }
@@ -257,15 +266,15 @@ your own dispatch path can do that.
 **MCP middleware** — wraps every tool a server exposes, including ones added later.
 
 ```ts
-import { guardTools } from 'content-airlock/mcp';
+import { guardTools } from 'im-in-danger/mcp';
 const handlers = guardTools(myHandlers, { detector: new JevDetector() });
 ```
 
 **CLI**
 
 ```bash
-echo "$SUSPICIOUS" | npx content-airlock check --detector jev
-npx content-airlock check --file page.html      # exit 0 clean, 1 suspect, 2 quarantine
+echo "$SUSPICIOUS" | npx im-in-danger check --detector jev
+npx im-in-danger check --file page.html      # exit 0 clean, 1 suspect, 2 quarantine
 ```
 
 ---
@@ -293,3 +302,9 @@ npm run eval -- --detector jev        # needs TYPESAFE_API_KEY
 ## License
 
 MIT
+
+
+---
+
+<sub>Meme template via imgflip. Ralph Wiggum and The Simpsons are © 20th Television;
+used here as a parody reaction image.</sub>

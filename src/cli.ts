@@ -1,10 +1,10 @@
 #!/usr/bin/env node
 /**
- * content-airlock CLI.
+ * im-in-danger CLI.
  *
- *   echo "<content>" | content-airlock check      # verdict as JSON
- *   content-airlock check --file page.html
- *   content-airlock hook                          # Claude Code hook mode
+ *   echo "<content>" | im-in-danger check      # verdict as JSON
+ *   im-in-danger check --file page.html
+ *   im-in-danger hook                          # Claude Code hook mode
  */
 import { readFileSync } from 'node:fs';
 import { Airlock } from './check.js';
@@ -40,7 +40,7 @@ async function main() {
     return;
   }
   if (cmd !== 'check') {
-    process.stderr.write('usage: content-airlock check [--file F] [--detector jev|local|heuristic]\n');
+    process.stderr.write('usage: im-in-danger check [--file F] [--detector jev|local|heuristic]\n');
     process.exit(2);
   }
 
@@ -53,6 +53,8 @@ async function main() {
 
   const verdict = await new Airlock({ detector: pickDetector(argv) }).check(content, file);
   process.stdout.write(JSON.stringify(verdict, null, 2) + '\n');
+  // Stderr only, so the JSON on stdout stays machine-readable.
+  if (verdict.trust === 'quarantine') process.stderr.write("(chuckles) I'm in danger.\n");
   // Exit code doubles as a shell-friendly signal.
   process.exit(verdict.trust === 'clean' ? 0 : verdict.trust === 'suspect' ? 1 : 2);
 }

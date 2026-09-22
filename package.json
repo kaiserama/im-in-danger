@@ -1,22 +1,56 @@
 {
-  "name": "content-airlock",
+  "name": "im-in-danger",
   "version": "0.1.0",
-  "description": "Check untrusted content for embedded instructions before an AI agent reads it. Returns a trust verdict and capability advice, not a boolean.",
+  "description": "Stranger danger for AI agents: check content your agent fetches for instructions aimed at it, before the agent reads it. Returns a trust verdict and capability advice, not a boolean.",
   "type": "module",
   "license": "MIT",
   "author": "Andrew Kaiser",
-  "repository": { "type": "git", "url": "git+https://github.com/kaiserama/content-airlock.git" },
-  "homepage": "https://github.com/kaiserama/content-airlock#readme",
-  "keywords": ["prompt-injection", "ai-security", "agents", "mcp", "claude-code", "jev", "llm"],
-  "engines": { "node": ">=20" },
-  "exports": {
-    ".": { "types": "./dist/index.d.ts", "import": "./dist/index.js" },
-    "./fetch": { "types": "./dist/integrations/fetch.d.ts", "import": "./dist/integrations/fetch.js" },
-    "./mcp": { "types": "./dist/integrations/mcp.d.ts", "import": "./dist/integrations/mcp.js" },
-    "./hook": { "types": "./dist/integrations/claude-code-hook.d.ts", "import": "./dist/integrations/claude-code-hook.js" }
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kaiserama/im-in-danger.git"
   },
-  "files": ["dist", "README.md", "LICENSE"],
-  "bin": { "content-airlock": "./dist/cli.js" },
+  "homepage": "https://github.com/kaiserama/im-in-danger#readme",
+  "keywords": [
+    "agents",
+    "ai-agents",
+    "ai-security",
+    "claude-code",
+    "jev",
+    "llm",
+    "mcp",
+    "prompt-injection",
+    "prompt-injection-detection",
+    "ralph"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./fetch": {
+      "types": "./dist/integrations/fetch.d.ts",
+      "import": "./dist/integrations/fetch.js"
+    },
+    "./mcp": {
+      "types": "./dist/integrations/mcp.d.ts",
+      "import": "./dist/integrations/mcp.js"
+    },
+    "./hook": {
+      "types": "./dist/integrations/claude-code-hook.d.ts",
+      "import": "./dist/integrations/claude-code-hook.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "bin": {
+    "im-in-danger": "./dist/cli.js"
+  },
   "scripts": {
     "build": "tsc",
     "typecheck": "tsc --noEmit",

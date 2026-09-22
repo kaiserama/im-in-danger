@@ -11,7 +11,7 @@
  *         {
  *           "matcher": "WebFetch|Read|Bash",
  *           "hooks": [{ "type": "command",
- *                       "command": "npx -y content-airlock hook" }]
+ *                       "command": "npx -y im-in-danger hook" }]
  *         }
  *       ]
  *     }
@@ -76,7 +76,7 @@ async function main() {
 
   const block = verdict.trust === 'quarantine' && process.env.AIRLOCK_BLOCK !== '0';
   const summary =
-    `content-airlock: ${verdict.trust} (${verdict.detector}) on ${payload.tool_name ?? 'tool'} output. ` +
+    `im-in-danger: ${verdict.trust} (${verdict.detector}) on ${payload.tool_name ?? 'tool'} output. ` +
     verdict.reasons.join('; ');
 
   // additionalContext states a fact about the fetch. It is not an instruction,

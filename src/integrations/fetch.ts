@@ -33,7 +33,7 @@ export function createGuardedFetch(options: GuardedFetchOptions = {}) {
       return {
         ...env,
         content:
-          `[content-airlock] Content from ${origin} was quarantined and is not shown.\n` +
+          `[im-in-danger] Content from ${origin} was quarantined and is not shown.\n` +
           `Reasons: ${env.verdict.reasons.join('; ')}\n` +
           `A person must review it before an agent reads it.`,
       };
@@ -56,7 +56,7 @@ export function renderForTool(env: Envelope): string {
   const { verdict } = env;
   if (verdict.trust === 'clean') return env.content;
   const header = [
-    `[content-airlock] trust=${verdict.trust} detector=${verdict.detector}`,
+    `[im-in-danger] trust=${verdict.trust} detector=${verdict.detector}`,
     verdict.reasons.length ? `signals: ${verdict.reasons.join('; ')}` : '',
     'Side effects, egress and secrets are withdrawn for this content by the runtime.',
   ]
