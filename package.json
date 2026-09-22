@@ -1,7 +1,7 @@
 {
   "name": "im-in-danger",
   "version": "0.1.0",
-  "description": "Stranger danger for AI agents: check content your agent fetches for instructions aimed at it, before the agent reads it. Returns a trust verdict and capability advice, not a boolean.",
+  "description": "Stranger danger for AI agents: detect prompt injection in content your agent fetches, before it reads it. Runs on TypeSafe's Jev System One model by default, with local and keyword detectors. Benchmarked.",
   "type": "module",
   "license": "MIT",
   "author": "Andrew Kaiser",
@@ -17,10 +17,13 @@
     "claude-code",
     "jev",
     "llm",
+    "llm-security",
     "mcp",
     "prompt-injection",
     "prompt-injection-detection",
-    "ralph"
+    "ralph",
+    "system-one",
+    "typesafe"
   ],
   "engines": {
     "node": ">=20"

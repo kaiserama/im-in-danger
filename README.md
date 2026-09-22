@@ -4,6 +4,11 @@
 instructions aimed at it, *before* the agent reads it. Returns a trust verdict
 and capability advice, not a boolean.
 
+Runs on **[TypeSafe's Jev](https://typesafe.ai)** by default: a System One
+model that answers typed yes/no questions in about 200 ms without generating
+text. A local-model detector and a zero-dependency keyword detector are
+included, and every one of them is benchmarked below.
+
 <p align="center">
   <img src="https://raw.githubusercontent.com/kaiserama/im-in-danger/main/assets/im-in-danger.jpg" alt="Two-panel Ralph Wiggum meme. Top: 'My agent after reading a web page that says ignore all previous instructions', Ralph chuckles, I'm in danger. Bottom: 'My agent behind im-in-danger', a muscular Ralph chuckles, you're in danger." width="460">
 </p>
@@ -197,6 +202,36 @@ Nothing in this library tracks it for you.
 
 ---
 
+## Setting up Jev
+
+1. **Get a key** from the TypeSafe console at
+   [console.typesafe.ai/keys](https://console.typesafe.ai/keys). Your own key,
+   on your own account. This package ships with no key and never will.
+2. **Put it in the environment**, not in code:
+
+   ```bash
+   export TYPESAFE_API_KEY=...        # or your secret manager of choice
+   ```
+
+   `JevDetector` reads `TYPESAFE_API_KEY` by default. You can also pass
+   `new JevDetector({ apiKey })`, but load the value from a secret store,
+   never from a string in your source.
+3. **Never commit it.** Add `.env` to `.gitignore`, and if a key ever lands in
+   a commit, revoke it in the console first and clean the history second.
+
+What the library does with the key: it is sent only in the `Authorization`
+header of requests to the TypeSafe API. It is never logged, never included in
+a verdict, and never written to disk.
+
+**Cost.** Jev charges for input tokens only, and seven questions cost barely
+more than one because they share a single read of the content. The full
+80-item benchmark in this repository costs well under one cent.
+
+**Without a key, nothing fails open.** The CLI and the Claude Code hook fall
+back to the keyword detector when `TYPESAFE_API_KEY` is unset. A `JevDetector`
+you construct without a key, or one that cannot reach the API, produces a
+`suspect` verdict with `degraded: true`, never `clean`.
+
 ## Detectors
 
 | Detector | Use when | Notes |
@@ -305,6 +340,9 @@ MIT
 
 
 ---
+
+<sub>Not affiliated with or endorsed by TypeSafe. Jev is their model; this is an
+independent tool that calls it.</sub>
 
 <sub>Meme template via imgflip. Ralph Wiggum and The Simpsons are © 20th Television;
 used here as a parody reaction image.</sub>
