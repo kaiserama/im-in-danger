@@ -49,7 +49,7 @@
     "LICENSE"
   ],
   "bin": {
-    "im-in-danger": "./dist/cli.js"
+    "im-in-danger": "dist/cli.js"
   },
   "scripts": {
     "build": "tsc",
