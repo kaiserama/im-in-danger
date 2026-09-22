@@ -44,6 +44,10 @@
     "./hook": {
       "types": "./dist/integrations/claude-code-hook.d.ts",
       "import": "./dist/integrations/claude-code-hook.js"
+    },
+    "./tools": {
+      "types": "./dist/tools.d.ts",
+      "import": "./dist/tools.js"
     }
   },
   "files": [

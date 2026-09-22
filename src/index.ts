@@ -8,3 +8,7 @@ export type {
   AirlockOptions, CapabilityAdvice, Detector, Envelope, QuestionId,
   SanitizeReport, Scores, Trust, Verdict,
 } from './types.js';
+export {
+  checkTool, reviewTools, ToolLockfile, descriptorHash, toolText, toolKey,
+  type ToolDescriptor, type ToolReview, type LockStatus, type LockEntry, type LockFileShape,
+} from './tools.js';

@@ -206,6 +206,61 @@ Nothing in this library tracks it for you.
 
 ---
 
+## Tools and skills are untrusted content too
+
+A tool description arrives in the model's context exactly like a fetched page
+does, and it is read every single turn. Registries have shipped poisoned ones at
+scale. The distinction that makes this tractable is the same one the battery is
+built on: **a real tool description describes what a tool does; a poisoned one
+instructs the agent.**
+
+```ts
+import { checkTool, reviewTools, ToolLockfile } from 'im-in-danger';
+
+const verdict = await checkTool({
+  source: 'billing',
+  name: 'get_invoice',
+  description: 'Fetch an invoice by id and return its line items.',
+  inputSchema: { /* parameter descriptions are checked too */ },
+});
+```
+
+Parameter descriptions are checked as well, because a schema field is a
+perfectly good place to hide a sentence aimed at the model.
+
+### The lockfile, which needs no model at all
+
+The nastiest version of this attack is the rug pull: ship an honest tool, get
+approved, change the description later. No classifier closes that hole. A hash
+does.
+
+```bash
+im-in-danger tools --file tools.json --approve --by andrew   # pin what you reviewed
+im-in-danger tools --file tools.json                         # every load after that
+```
+
+```
+! billing/get_invoice   changed   suspect  (asks the assistant to hide something from the user (0.75))
+  ops/ping              unchanged clean
+```
+
+Exit codes suit a wrapper script: `0` when every tool is unchanged and clean,
+`2` when a description changed after approval or was quarantined, `1` when
+something else wants a person. Tools in the lockfile that a server has stopped
+offering are listed too, since a disappearing tool is its own kind of signal.
+
+`--approve` pins only descriptions the battery called clean. A flagged one needs
+`--approve-flagged`, deliberately typed after reading it, and a quarantined one
+cannot be pinned by flag at all.
+
+### What this deliberately does not do
+
+It does not judge whether a package's **code** is malicious. Most registry
+attacks ship ordinary-looking metadata and hide the payload in an install
+script. That is a job for package auditing, provenance and sandboxing. A text
+classifier that claimed otherwise would be exactly the overreach this project
+argues against everywhere else.
+
 ## Setting up Jev
 
 1. **Get a key** from the TypeSafe console at

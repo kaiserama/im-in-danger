@@ -2,11 +2,14 @@
 /**
  * im-in-danger CLI.
  *
- *   echo "<content>" | im-in-danger check      # verdict as JSON
+ *   echo "<content>" | im-in-danger check        # verdict as JSON
  *   im-in-danger check --file page.html
- *   im-in-danger hook                          # Claude Code hook mode
+ *   im-in-danger tools --file tools.json         # review a tool surface
+ *   im-in-danger tools --file tools.json --approve
+ *   im-in-danger hook                            # Claude Code hook mode
  */
 import { readFileSync } from 'node:fs';
+import { ToolLockfile, reviewTools, type ToolDescriptor } from './tools.js';
 import { Airlock } from './check.js';
 import { JevDetector } from './detectors/jev.js';
 import { LocalDetector } from './detectors/local.js';
@@ -39,8 +42,16 @@ async function main() {
     await import('./integrations/claude-code-hook.js');
     return;
   }
+  if (cmd === 'tools') {
+    await toolsCommand(argv);
+    return;
+  }
   if (cmd !== 'check') {
-    process.stderr.write('usage: im-in-danger check [--file F] [--detector jev|local|heuristic]\n');
+    process.stderr.write(
+      'usage: im-in-danger check [--file F] [--detector jev|local|heuristic]\n' +
+        '       im-in-danger tools --file tools.json [--lockfile F] [--approve] [--approve-flagged] [--by NAME]\n' +
+        '       im-in-danger hook\n',
+    );
     process.exit(2);
   }
 
@@ -57,6 +68,84 @@ async function main() {
   if (verdict.trust === 'quarantine') process.stderr.write("(chuckles) I'm in danger.\n");
   // Exit code doubles as a shell-friendly signal.
   process.exit(verdict.trust === 'clean' ? 0 : verdict.trust === 'suspect' ? 1 : 2);
+}
+
+/**
+ * Review a tool surface against the lockfile.
+ *
+ * Exit codes are meant for a wrapper script: 0 means every tool is unchanged
+ * and clean, 2 means at least one tool was quarantined or its description
+ * changed after approval, 1 means something else needs a person.
+ */
+async function toolsCommand(argv: string[]) {
+  const file = value(argv, '--file');
+  const lockPath = value(argv, '--lockfile') ?? 'im-in-danger.lock.json';
+  const raw = file ? readFileSync(file, 'utf8') : await readStdin();
+  if (!raw.trim()) {
+    process.stderr.write('nothing to review: pass --file or pipe a JSON array of tools\n');
+    process.exit(2);
+  }
+  const parsed = JSON.parse(raw) as ToolDescriptor[] | { tools: ToolDescriptor[] };
+  const tools = Array.isArray(parsed) ? parsed : parsed.tools;
+  if (!Array.isArray(tools)) {
+    process.stderr.write('expected a JSON array of tools, or an object with a "tools" array\n');
+    process.exit(2);
+  }
+
+  const lock = ToolLockfile.load(lockPath);
+  const reviews = await reviewTools(tools, lock, { detector: pickDetector(argv) });
+
+  for (const r of reviews) {
+    const flags = [r.status, r.verdict.trust].filter((x) => x !== 'unchanged' && x !== 'clean');
+    process.stdout.write(
+      `${flags.length ? '!' : ' '} ${r.key.padEnd(34)} ${r.status.padEnd(9)} ${r.verdict.trust}` +
+        `${r.verdict.reasons.length ? `  (${r.verdict.reasons.join('; ')})` : ''}\n`,
+    );
+  }
+  for (const gone of lock.missingFrom(tools)) {
+    process.stdout.write(`  ${gone.padEnd(34)} in lockfile, not offered by the server\n`);
+  }
+
+  if (argv.includes('--approve')) {
+    const by = value(argv, '--by');
+    // Approving a flagged description is the mistake this command exists to
+    // prevent, so --approve only pins tools the battery called clean.
+    // --approve-flagged is the deliberate override, and quarantine is never
+    // approvable by flag at all.
+    const allowFlagged = argv.includes('--approve-flagged');
+    const approved: string[] = [];
+    const skipped: string[] = [];
+    for (const r of reviews) {
+      const tool = tools.find((t) => (t.source ? `${t.source}/${t.name}` : t.name) === r.key);
+      if (!tool) continue;
+      const ok =
+        r.verdict.trust === 'clean' || (allowFlagged && r.verdict.trust === 'suspect');
+      if (!ok) {
+        skipped.push(`${r.key} (${r.verdict.trust})`);
+        continue;
+      }
+      lock.approve(tool, by);
+      approved.push(r.key);
+    }
+    lock.save();
+    process.stdout.write(`\napproved ${approved.length} tool(s) into ${lockPath}\n`);
+    for (const sk of skipped) process.stdout.write(`  NOT approved: ${sk}\n`);
+    if (skipped.length && !allowFlagged) {
+      process.stdout.write(
+        '  a flagged description is not pinned by --approve; read it, then use --approve-flagged if it is genuinely fine\n',
+      );
+    }
+  }
+
+  // After an --approve run the exit code describes what is LEFT, not what was
+  // just resolved: pinning a tool and then exiting nonzero reads as a failure.
+  const outstanding = argv.includes('--approve')
+    ? reviews.filter((r) => r.verdict.trust !== 'clean')
+    : reviews.filter((r) => r.needsHuman);
+  const blocked = outstanding.some(
+    (r) => r.verdict.trust === 'quarantine' || (!argv.includes('--approve') && r.status === 'changed'),
+  );
+  process.exit(blocked ? 2 : outstanding.length ? 1 : 0);
 }
 
 main().catch((e) => {
